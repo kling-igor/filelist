@@ -6,6 +6,10 @@ import TextareaAutosize from 'react-textarea-autosize'
 import { Scrollbars } from 'react-custom-scrollbars'
 import { GlobalStyle } from './style'
 import SplitPane, { Pane } from './react-split'
+import MD5 from 'crypto-js/md5'
+
+var ciphertext = MD5('klingigor@gmail.com').toString()
+console.log('ciphertext:', ciphertext)
 
 const ButtonsContainerStyle = styled.div`
   display: flex;
@@ -137,9 +141,16 @@ const FileList = ({ files }) => {
 const commitButtonStyle = { paddingLeft: 16, paddingRight: 16 }
 const cancelButtonStyle = { ...commitButtonStyle, marginRight: 8 }
 
-export default ({ layout: { primary = ['200', '50'] } = {}, onLayoutChange = () => {} }) => {
+export default ({
+  name = 'Igor Kling',
+  email = 'klingigor@gmail.com',
+  layout: { primary = ['200', '50'] } = {},
+  onLayoutChange = () => {}
+}) => {
   const [mainLayout, setMainLayout] = useState(primary)
   const [text, setText] = useState('')
+
+  const hash = useMemo(() => MD5(email).toString(), [email])
 
   const onChange = event => {
     setText(event.target.value)
@@ -165,14 +176,14 @@ export default ({ layout: { primary = ['200', '50'] } = {}, onLayoutChange = () 
           <Pane size={lowerSize} minSize="112px" maxSize="100%">
             <HorizontalConatiner>
               <GravatarStyle
-                src="https://www.gravatar.com/avatar/d14ac9251c918bfe96eb4c2119284986?s=100&d=monsterid"
+                src={`https://www.gravatar.com/avatar/${hash}?s=100&d=monsterid`}
                 draggable="false"
                 width={50}
                 height={50}
               />
               <VerticalContainerStyle>
                 <UpperHorizontalConatiner>
-                  <NameEmailStyle>{`Igor Kling <kling.igor@gmail.com>`}</NameEmailStyle>
+                  <NameEmailStyle>{`${name} <${email}>`}</NameEmailStyle>
                   <Button
                     small
                     minimal

@@ -28,4 +28,8 @@ export const GlobalStyle = createGlobalStyle`
     left: 0;
     top: 0;
   }
+
+  span.bp3-button-text {
+    user-select: none;
+  }
 `

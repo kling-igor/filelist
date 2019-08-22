@@ -143,7 +143,7 @@ const cancelButtonStyle = { ...commitButtonStyle, marginRight: 8 }
 
 export default ({
   name = 'Igor Kling',
-  email = 'klingigor@gmail.com',
+  email = '111klingigor@gmail.com',
   layout: { primary = ['200', '50'] } = {},
   onLayoutChange = () => {}
 }) => {
@@ -176,7 +176,7 @@ export default ({
           <Pane size={lowerSize} minSize="112px" maxSize="100%">
             <HorizontalConatiner>
               <GravatarStyle
-                src={`https://www.gravatar.com/avatar/${hash}?s=100&d=monsterid`}
+                src={`https://www.gravatar.com/avatar/${hash}?s=100&d=identicon`}
                 draggable="false"
                 width={50}
                 height={50}

@@ -181,7 +181,7 @@ export default ({ layout: { primary = ['200', '50'] } = {}, onLayoutChange = () 
                       console.log('HISTORY MESSAGES')
                     }}
                     // text="History"
-                    // intent={Intent.PRIMARY}
+                    intent={Intent.PRIMARY}
                     // disabled={!hasHistoryChanges}
                     style={{ width: '30px', height: '30px', marginRight: '8px', outline: 'none' }}
                   />

@@ -138,7 +138,7 @@ export default ({
       }
     }, [])
 
-    setStagedFiles([...stagedFiles, ...filtered])
+    setStagedFiles([...new Set([...stagedFiles, ...filtered])])
     setChangedFiles(remained)
   })
 
@@ -166,7 +166,7 @@ export default ({
       }
     }, [])
 
-    setChangedFiles([...stagedFiles, ...filtered])
+    setChangedFiles([...new Set([...stagedFiles, ...filtered])])
     setStagedFiles(remained)
   })
 

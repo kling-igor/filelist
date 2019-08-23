@@ -115,11 +115,20 @@ const BadgeStyle = styled.div`
 `
 
 const StatusBadge = memo(({ value }) => {
-  const color = (colors[value] && colors[value].color) || 'white'
-  const backgroundColor = (colors[value] && colors[value].backgroundColor) || 'blue'
+  const letter = useMemo(() => {
+    let letter = value.replace('I', '')
+    if (letter.length > 1 && letter.includes('D')) {
+      letter = value.replace('D', '')
+    }
+    return letter
+  }, [value])
+
+  const color = (colors[letter] && colors[letter].color) || 'white'
+  const backgroundColor = (colors[letter] && colors[letter].backgroundColor) || 'blue'
+
   return (
     <BadgeStyle color={color} backgroundColor={backgroundColor}>
-      {value}
+      {letter}
     </BadgeStyle>
   )
 })
@@ -138,20 +147,21 @@ const Checkbox = memo(({ indeterminate, ...props }) => {
 
 // https://www.git-scm.com/docs/git-status#_short_format
 
-const FileList = ({ files, caption }) => {
+const FileList = ({ files, caption, onSelectionChanged }) => {
   const [checkboxes, setCheckboxes] = useState({})
   const [allChecked, setAllChecked] = useState(false)
   const [indeterminate, setIndeterminate] = useState(false)
 
   useEffect(() => {
     // первоначальное заполнение checkboxes (все false)
-    setCheckboxes(
+    setCheckboxes(old =>
+      // TODO: может придти обновленный состав files и нужно в новом наборе восстановить состояния чекбоксов, который были до этого !!!
       files.reduce((obj, { filename, path }) => {
-        obj[`${path}/${filename}`] = false
+        obj[`${path}/${filename}`] = !!old[`${path}/${filename}`]
         return obj
       }, {})
     )
-  }, [])
+  }, [files])
 
   const handleInputChange = useCallback(
     event => {
@@ -164,12 +174,26 @@ const FileList = ({ files, caption }) => {
   )
 
   useEffect(() => {
-    const values = Object.values(checkboxes)
-    const isAllChecked = values.length > 0 && values.every(item => !!item)
-    const isNoOneChecked = values.length > 0 && values.every(item => !item)
+    const entries = Object.entries(checkboxes)
+
+    let isAllChecked = true
+    let isAllUnchecked = true
+    const selected = entries.reduce((acc, [key, selected]) => {
+      if (selected) {
+        isAllUnchecked = false
+        return [...acc, key]
+      } else {
+        isAllChecked = false
+        return acc
+      }
+    }, [])
+
     setAllChecked(isAllChecked)
-    const isPartiallyChecked = !isAllChecked && !isNoOneChecked
+
+    const isPartiallyChecked = !isAllChecked && !isAllUnchecked
     setIndeterminate(isPartiallyChecked)
+
+    onSelectionChanged(selected)
   }, [checkboxes])
 
   const handleCaptionInputChange = useCallback(event => {

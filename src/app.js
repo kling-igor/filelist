@@ -41,6 +41,8 @@ const files = [
 
 const ListItemContainerStyle = styled.li`
   padding: 0;
+  padding-left: 4px;
+  padding-right: 4px;
   margin: 0;
   list-style-type: none;
   display: flex;
@@ -88,7 +90,13 @@ const ListStyle = styled.ul`
 `
 
 const CaptionStyle = styled.div`
-  font-weight: 700;
+  padding: 0;
+  margin: 0;
+  padding-left: 4px;
+`
+
+const CaptionText = styled.b`
+  user-select: none;
 `
 
 const Checkbox = memo(({ indeterminate, ...props }) => {
@@ -152,10 +160,10 @@ const FileList = ({ files, caption }) => {
 
   return (
     <>
-      <div>
+      <CaptionStyle>
         <Checkbox indeterminate={indeterminate} checked={allChecked || false} onChange={handleCaptionInputChange} />
-        <b>{caption}</b>
-      </div>
+        <CaptionText>{caption}</CaptionText>
+      </CaptionStyle>
       <ListStyle>
         {files.map(({ filename, path, status }) => (
           <ListItemContainerStyle key={`${path}/${filename}`}>
@@ -185,13 +193,59 @@ const processedFiles = files.map(item => {
   return { filename, path, status: item.status }
 })
 
+const StagedFiles = memo(({ files }) => {
+  return (
+    <Scrollbars
+      style={{ width: '100%', height: '100%' }}
+      thumbMinSize={30}
+      autoHide
+      autoHideTimeout={1000}
+      autoHideDuration={200}
+    >
+      <FileList files={files} caption="STAGED" />
+    </Scrollbars>
+  )
+})
+
+const ChangedFiles = memo(({ files }) => {
+  return (
+    <Scrollbars
+      style={{ width: '100%', height: '100%' }}
+      thumbMinSize={30}
+      autoHide
+      autoHideTimeout={1000}
+      autoHideDuration={200}
+    >
+      <FileList files={files} caption="CHANGES" />
+    </Scrollbars>
+  )
+})
+
+const FilesPane = memo(({ setMainLayout, upperSize, lowerSize }) => {
+  return (
+    <div style={{ height: '100%', width: '100%', backgroundColor: 'green' }}>
+      <SplitPane split="horizontal" allowResize resizersSize={0} onResizeEnd={setMainLayout}>
+        <Pane size={upperSize} minSize="50px" maxSize="100%">
+          {/* <div style={{ height: '100%', backgroundColor: 'yellow' }} /> */}
+          <StagedFiles files={processedFiles} />
+        </Pane>
+        <Pane size={lowerSize} minSize="50px" maxSize="100%">
+          {/* <CommitPane email={email} name={name} onChange={onChange} text={text} /> */}
+          <ChangedFiles files={processedFiles} />
+        </Pane>
+      </SplitPane>
+    </div>
+  )
+})
+
 export default ({
   name = 'Igor Kling',
   email = 'klingigor@gmail.com',
-  layout: { primary = ['200', '50'] } = {},
+  layout: { primary = ['20000', '5000'], vertical = ['20000', '20000'] } = {},
   onLayoutChange = () => {}
 }) => {
   const [mainLayout, setMainLayout] = useState(primary)
+  const [verticalLayout, setVerticalLayout] = useState(vertical)
   const [text, setText] = useState('')
 
   const onChange = event => {
@@ -199,7 +253,7 @@ export default ({
   }
 
   useEffect(() => {
-    const serialized = { primary: mainLayout }
+    const serialized = { primary: mainLayout, vertical: verticalLayout }
     console.log('serialized:', serialized)
     onLayoutChange(serialized)
   }, [mainLayout])
@@ -207,34 +261,19 @@ export default ({
   const upperSize = +mainLayout[0] / 100
   const lowerSize = +mainLayout[1] / 100
 
+  const leftSize = +verticalLayout[0] / 100
+  const rightSize = +verticalLayout[1] / 100
+
   return (
     <>
       <GlobalStyle />
       <RootStyle>
-        <SplitPane split="horizontal" allowResize resizersSize={0} onResizeEnd={setMainLayout}>
-          <Pane size={upperSize} minSize="100px" maxSize="100%">
-            {/* <div style={{ height: '100%', backgroundColor: 'yellow' }} /> */}
-            <Scrollbars
-              style={{ width: 200, height: '100%' }}
-              thumbMinSize={30}
-              autoHide
-              autoHideTimeout={1000}
-              autoHideDuration={200}
-            >
-              <FileList files={processedFiles} caption="STAGED" />
-            </Scrollbars>
+        <SplitPane split="vertical" allowResize resizersSize={0} onResizeEnd={setVerticalLayout}>
+          <Pane size={leftSize} minSize="100px" maxSize="100%">
+            <FilesPane setMainLayout={setMainLayout} upperSize={upperSize} lowerSize={lowerSize} />
           </Pane>
-          <Pane size={lowerSize} minSize="112px" maxSize="100%">
-            {/* <CommitPane email={email} name={name} onChange={onChange} text={text} /> */}
-            <Scrollbars
-              style={{ width: 200, height: '100%' }}
-              thumbMinSize={30}
-              autoHide
-              autoHideTimeout={1000}
-              autoHideDuration={200}
-            >
-              <FileList files={processedFiles} caption="CHANGES" />
-            </Scrollbars>
+          <Pane size={rightSize} minSize="100px" maxSize="100%">
+            <div style={{ height: '100%', width: '100%', backgroundColor: 'yellow' }} />
           </Pane>
         </SplitPane>
       </RootStyle>

@@ -115,58 +115,56 @@ export default ({
   }, [mainLayout])
 
   const addSelectedToIndex = useCallback(() => {
-    // console.log('ADD TO INDEX:', selectedChangedFiles)
-
     if (selectedChangedFiles.length === 0) {
       return
     }
 
     let selected = selectedChangedFiles.slice()
-    let remained = changedFiles.slice()
 
-    const filtered = changedFiles.reduce((acc, item, idx) => {
-      const fullPath = `${item.path}/${item.filename}`
-      const index = selected.findIndex(i => i === fullPath)
-      if (index !== -1) {
-        selected = [...selected.slice(0, index), ...selected.slice(index + 1)]
+    const [filtered, remained] = changedFiles.reduce(
+      (acc, item) => {
+        const fullPath = `${item.path}/${item.filename}`
+        const index = selected.findIndex(i => i === fullPath)
+        if (index !== -1) {
+          acc[0].push(item)
+          selected = [...selected.slice(0, index), ...selected.slice(index + 1)]
+        } else {
+          acc[1].push(item)
+        }
 
-        remained = [...remained.slice(0, idx), ...remained.slice(idx + 1)]
-
-        return [...acc, item]
-      } else {
         return acc
-      }
-    }, [])
+      },
+      [[], []]
+    )
 
     setStagedFiles([...new Set([...stagedFiles, ...filtered])])
     setChangedFiles(remained)
   })
 
   const removeSelectedFromIndex = useCallback(() => {
-    console.log('REMOVE FROM INDEX:', selectedStagedFiles)
-
     if (selectedStagedFiles.length === 0) {
       return
     }
 
     let selected = selectedStagedFiles.slice()
-    let remained = stagedFiles.slice()
 
-    const filtered = stagedFiles.reduce((acc, item, idx) => {
-      const fullPath = `${item.path}/${item.filename}`
-      const index = selected.findIndex(i => i === fullPath)
-      if (index !== -1) {
-        selected = [...selected.slice(0, index), ...selected.slice(index + 1)]
+    const [filtered, remained] = stagedFiles.reduce(
+      (acc, item) => {
+        const fullPath = `${item.path}/${item.filename}`
+        const index = selected.findIndex(i => i === fullPath)
+        if (index !== -1) {
+          acc[0].push(item)
+          selected = [...selected.slice(0, index), ...selected.slice(index + 1)]
+        } else {
+          acc[1].push(item)
+        }
 
-        remained = [...remained.slice(0, idx), ...remained.slice(idx + 1)]
-
-        return [...acc, item]
-      } else {
         return acc
-      }
-    }, [])
+      },
+      [[], []]
+    )
 
-    setChangedFiles([...new Set([...stagedFiles, ...filtered])])
+    setChangedFiles([...new Set([...changedFiles, ...filtered])])
     setStagedFiles(remained)
   })
 

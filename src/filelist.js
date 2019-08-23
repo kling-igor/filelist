@@ -176,7 +176,7 @@ const FileList = ({ files, caption, onSelectionChanged }) => {
   useEffect(() => {
     const entries = Object.entries(checkboxes)
 
-    let isAllChecked = true
+    let isAllChecked = entries.length > 0
     let isAllUnchecked = true
     const selected = entries.reduce((acc, [key, selected]) => {
       if (selected) {

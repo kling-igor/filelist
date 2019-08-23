@@ -1,6 +1,7 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react'
+import React, { memo, useCallback, useMemo, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { Scrollbars } from 'react-custom-scrollbars'
+// import { Checkbox } from '@blueprintjs/core'
 import { GlobalStyle } from './style'
 import SplitPane, { Pane } from './react-split'
 
@@ -15,7 +16,7 @@ const RootStyle = styled.div`
   /* right: 0px; */
   /* height: 200px; */
   height: 100%;
-  background-color: magenta;
+  /* background-color: magenta; */
   display: flex;
   flex-direction: row;
 `
@@ -38,19 +39,155 @@ const files = [
   { path: 'src/common/file15.js', status: 'M' }
 ]
 
-const FileList = ({ files }) => {
+const ListItemContainerStyle = styled.li`
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+
+  cursor: pointer;
+  user-select: none;
+  :hover {
+    background-color: blue;
+    color: white;
+  }
+`
+
+const ListItemLeftGroupStyle = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: baseline;
+`
+
+const ListItemFilenameStyle = styled.span`
+  white-space: nowrap;
+`
+
+const ListItemPathStyle = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  margin-left: 1em;
+  opacity: 0.8;
+`
+
+const ListStyle = styled.ul`
+  font-size: 13px;
+  font-family: 'Open Sans', sans-serif;
+  white-space: nowrap;
+  padding: 0;
+  margin: 0px;
+  margin-top: 0px;
+`
+
+const CaptionStyle = styled.div`
+  font-weight: 700;
+`
+
+const Checkbox = memo(({ indeterminate, ...props }) => {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = indeterminate
+    }
+  }, [indeterminate])
+
+  return <input ref={ref} type="checkbox" {...props} />
+})
+
+// https://www.git-scm.com/docs/git-status#_short_format
+
+const FileList = ({ files, caption }) => {
+  const [checkboxes, setCheckboxes] = useState({})
+  const [allChecked, setAllChecked] = useState(false)
+  const [indeterminate, setIndeterminate] = useState(false)
+
+  useEffect(() => {
+    // первоначальное заполнение checkboxes (все false)
+    setCheckboxes(
+      files.reduce((obj, { filename, path }) => {
+        obj[`${path}/${filename}`] = false
+        return obj
+      }, {})
+    )
+  }, [])
+
+  const handleInputChange = useCallback(
+    event => {
+      const key = event.currentTarget.dataset.path
+      setCheckboxes(old => {
+        return { ...old, [key]: !old[key] }
+      })
+    },
+    [checkboxes]
+  )
+
+  useEffect(() => {
+    const values = Object.values(checkboxes)
+    const isAllChecked = values.length > 0 && values.every(item => !!item)
+    const isNoOneChecked = values.length > 0 && values.every(item => !item)
+    setAllChecked(isAllChecked)
+    const isPartiallyChecked = !isAllChecked && !isNoOneChecked
+    setIndeterminate(isPartiallyChecked)
+  }, [checkboxes])
+
+  const handleCaptionInputChange = useCallback(event => {
+    const { checked } = event.target
+
+    setCheckboxes(prev =>
+      Object.keys(prev).reduce((obj, key) => {
+        obj[key] = checked
+        return obj
+      }, {})
+    )
+  })
+
   return (
-    <ul>
-      {files.map(({ path, status }) => (
-        <li key={path}>{path}</li>
-      ))}
-    </ul>
+    <>
+      <div>
+        <Checkbox indeterminate={indeterminate} checked={allChecked || false} onChange={handleCaptionInputChange} />
+        <b>{caption}</b>
+      </div>
+      <ListStyle>
+        {files.map(({ filename, path, status }) => (
+          <ListItemContainerStyle key={`${path}/${filename}`}>
+            <ListItemLeftGroupStyle>
+              <input
+                type="checkbox"
+                checked={checkboxes[`${path}/${filename}`] || false}
+                onChange={handleInputChange}
+                data-path={`${path}/${filename}`}
+              />
+              <ListItemFilenameStyle>{filename}</ListItemFilenameStyle>
+              <ListItemPathStyle>{path}</ListItemPathStyle>
+            </ListItemLeftGroupStyle>
+            {status}
+          </ListItemContainerStyle>
+        ))}
+      </ListStyle>
+    </>
   )
 }
 
+const processedFiles = files.map(item => {
+  const parts = item.path.split('/')
+  const filename = parts.pop()
+  const path = parts.join('/')
+
+  return { filename, path, status: item.status }
+})
+
 export default ({
   name = 'Igor Kling',
-  email = '111klingigor@gmail.com',
+  email = 'klingigor@gmail.com',
   layout: { primary = ['200', '50'] } = {},
   onLayoutChange = () => {}
 }) => {
@@ -76,29 +213,31 @@ export default ({
       <RootStyle>
         <SplitPane split="horizontal" allowResize resizersSize={0} onResizeEnd={setMainLayout}>
           <Pane size={upperSize} minSize="100px" maxSize="100%">
-            <div style={{ height: '100%', backgroundColor: 'yellow' }} />
+            {/* <div style={{ height: '100%', backgroundColor: 'yellow' }} /> */}
+            <Scrollbars
+              style={{ width: 200, height: '100%' }}
+              thumbMinSize={30}
+              autoHide
+              autoHideTimeout={1000}
+              autoHideDuration={200}
+            >
+              <FileList files={processedFiles} caption="STAGED" />
+            </Scrollbars>
           </Pane>
           <Pane size={lowerSize} minSize="112px" maxSize="100%">
-            <CommitPane email={email} name={name} onChange={onChange} text={text} />
+            {/* <CommitPane email={email} name={name} onChange={onChange} text={text} /> */}
+            <Scrollbars
+              style={{ width: 200, height: '100%' }}
+              thumbMinSize={30}
+              autoHide
+              autoHideTimeout={1000}
+              autoHideDuration={200}
+            >
+              <FileList files={processedFiles} caption="CHANGES" />
+            </Scrollbars>
           </Pane>
         </SplitPane>
       </RootStyle>
     </>
   )
-}
-
-{
-  /* <Scrollbars
-  style={{ width: 200, height: '100%' }}
-  thumbMinSize={30}
-  autoHide
-  autoHideTimeout={1000}
-  autoHideDuration={200}
-> */
-}
-{
-  /* <FileList files={files} /> */
-}
-{
-  /* </Scrollbars> */
 }
